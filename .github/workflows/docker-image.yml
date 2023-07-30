@@ -1,0 +1,35 @@
+name: Python Docker Host Runner
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Build Docker image
+        run: sudo docker build -t contact_slack_docker_image .
+        working-directory: .
+
+      - name: Stop previous Docker container
+        run: sudo docker stop contact_slack_docker_container || true
+        continue-on-error: true
+
+      - name: Remove previous Docker container
+        run: sudo docker rm contact_slack_docker_container || true
+        continue-on-error: true
+
+      - name: Run Docker container
+        run: sudo docker run -d --name contact_slack_docker_container contact_slack_docker_image
